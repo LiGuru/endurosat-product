@@ -1,8 +1,9 @@
-### EnduroSat
+## EnduroSat
 
 - [Task#1](documentation/endurosat-protocol-description.md)
     - [Diagram](documentation/endurosat.puml)
 
+### Approach
 
 ```
 .
