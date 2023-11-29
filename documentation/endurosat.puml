@@ -1,0 +1,241 @@
+@startuml
+skinparam sequence {
+    ArrowColor Black
+
+    ActorBorderColor Navy
+    ActorBackgroundColor Azure
+
+    LifeLineBorderColor Navy
+
+    ParticipantBorderColor Navy
+    ParticipantBackgroundColor Azure
+
+}
+/' Queue Skin definition '/
+skinparam queue {
+    BackgroundColor Azure
+    BorderColor Navy
+}
+/' Note Skin definition '/
+skinparam note {
+    BorderColor Crimson
+}
+/' - - - - - EnduroSat Skin for background end - - - - - '/
+
+box "Space Segment" #LightSteelBlue
+participant "Ground Station" as GND
+participant "UHF Tx/Rx" as UHF
+participant "UHF Antenna" as Ant
+end box
+
+activate GND
+
+== t = time at which the Antenna release process begins ==
+
+group Antenna deployment logic
+
+    alt Boot_Cnt < MaxBoot_Cnt_Ant
+        note right of Ant: MaxBoot_Cnt_Ant should be set to 100
+        Ant -> Ant: Delay ( **120** sec )
+    end
+
+    alt Robust_Flag_Ant == 1
+        note right of Ant
+        First ever boot
+        end note
+        Ant -> Ant: Set Robust_Flag_Ant = 0
+    else Robust_Flag_Ant == 0
+        note right of Ant
+        Subsequent boots
+        end note
+        Ant -> Ant: Check antenna status
+        alt Antenna deployed
+            Ant -> Ant: Exit "Antenna deployment logic" block
+        end
+    end
+
+    Ant -> Ant: Run **MCU Deployment Algorithm**
+    Ant -> Ant: Wait for **MCU Deployment Algorithm** to complete
+
+    Ant -> Ant: Check antenna status
+    alt Antenna deployed
+        Ant -> Ant: Exit "Antenna deployment logic" block
+    end
+
+    Ant -> Ant: Run **MCU Deployment Algorithm**
+
+end
+
+
+group UHF deployment logic
+
+    alt Boot_Cnt < MaxBoot_Cnt_UHF
+        note right of UHF: MaxBoot_Cnt_UHF should be set to 150
+        UHF -> UHF: Delay ( **300** sec )
+    end
+
+    group Loop 4 times
+        group loop until a deployment algorithm is executed or timeout
+            UHF -> Ant: Check antenna status
+            Ant --> UHF: Return antenna status
+            alt Antenna deployed
+                UHF -> UHF: Exit "UHF deployment logic" block
+            else Antenna not deployed
+                alt No algorithm currently running
+                    alt loop counter even
+                        UHF -> Ant: Run **MCU Deployment Algorithm**
+                        UHF -> UHF: Wait for **MCU Deployment Algorithm** to complete
+                    else loop counter odd
+                        UHF -> Ant: Run **GPO Deployment Algorithm**
+                        UHF -> UHF: Wait for **GPO Deployment Algorithm** to complete
+                    end
+                    UHF -> Ant: Check antenna status
+                    Ant --> UHF: Return antenna status
+                    alt Antenna deployed
+                        UHF -> UHF: Exit "UHF deployment logic" block
+                    end
+                     UHF -> UHF: Exit loop until a deployment algorithm is executed or timeout
+                else Algorithm currently running or no communication between UHF transceiver and UHF antenna
+                    UHF -> UHF: Wait **1** sec
+                    alt waiting period longer than timeout of 2 min
+                        UHF -> Ant: Run **GPO Deployment Algorithm**
+                        UHF -> UHF: Wait for **GPO Deployment Algorithm** to complete
+
+                        UHF -> Ant: Check antenna status
+                        Ant --> UHF: Return antenna status
+                        alt Antenna deployed
+                            UHF -> UHF: Exit "UHF deployment logic" block
+                        end
+                        UHF -> UHF: Exit innermost loop due to timeout
+                    end
+
+                end
+            end
+        end
+
+        UHF -> UHF: Increment Loop counter
+        UHF -> UHF: Delay ( **5** sec)
+    end
+end
+
+@enduml
+
+@startuml 2141_LEOP_Sequence
+
+skinparam sequence {
+    ArrowColor Black
+
+    ActorBorderColor Navy
+    ActorBackgroundColor Azure
+
+    LifeLineBorderColor Navy
+
+    ParticipantBorderColor Navy
+    ParticipantBackgroundColor Azure
+
+}
+skinparam queue {
+    BackgroundColor Azure
+    BorderColor Navy
+}
+skinparam note {
+    BorderColor Crimson
+}
+
+box "Space Segment" #LightSteelBlue
+participant "Ground Station" as GND
+participant "UHF Tx/Rx" as UHF
+participant "UHF Antenna" as Ant
+end box
+
+activate GND
+
+== t = time at which the Antenna release process begins ==
+
+group Antenna deployment logic
+
+    alt Boot_Cnt < MaxBoot_Cnt_Ant
+        note right of Ant: MaxBoot_Cnt_Ant should be set to 100
+        Ant -> Ant: Delay ( **120** sec )
+    end
+
+    alt Robust_Flag_Ant == 1
+        note right of Ant
+        First ever boot
+        end note
+        Ant -> Ant: Set Robust_Flag_Ant = 0
+    else Robust_Flag_Ant == 0
+        note right of Ant
+        Subsequent boots
+        end note
+        Ant -> Ant: Check antenna status
+        alt Antenna deployed
+            Ant -> Ant: Exit "Antenna deployment logic" block
+        end
+    end
+
+    Ant -> Ant: Run **MCU Deployment Algorithm**
+    Ant -> Ant: Wait for **MCU Deployment Algorithm** to complete
+
+    Ant -> Ant: Check antenna status
+    alt Antenna deployed
+        Ant -> Ant: Exit "Antenna deployment logic" block
+    end
+
+    Ant -> Ant: Run **MCU Deployment Algorithm**
+
+end
+
+
+group UHF deployment logic
+
+    alt Boot_Cnt < MaxBoot_Cnt_UHF
+        note right of UHF: MaxBoot_Cnt_UHF should be set to 150
+        UHF -> UHF: Delay ( **300** sec )
+    end
+
+    group Loop 4 times
+        group loop until a deployment algorithm is executed or timeout
+            UHF -> Ant: Check antenna status
+            Ant --> UHF: Return antenna status
+            alt Antenna deployed
+                UHF -> UHF: Exit "UHF deployment logic" block
+            else Antenna not deployed
+                alt No algorithm currently running
+                    alt loop counter even
+                        UHF -> Ant: Run **MCU Deployment Algorithm**
+                        UHF -> UHF: Wait for **MCU Deployment Algorithm** to complete
+                    else loop counter odd
+                        UHF -> Ant: Run **GPO Deployment Algorithm**
+                        UHF -> UHF: Wait for **GPO Deployment Algorithm** to complete
+                    end
+                    UHF -> Ant: Check antenna status
+                    Ant --> UHF: Return antenna status
+                    alt Antenna deployed
+                        UHF -> UHF: Exit "UHF deployment logic" block
+                    end
+                     UHF -> UHF: Exit loop until a deployment algorithm is executed or timeout
+                else Algorithm currently running or no communication between UHF transceiver and UHF antenna
+                    UHF -> UHF: Wait **1** sec
+                    alt waiting period longer than timeout of 2 min
+                        UHF -> Ant: Run **GPO Deployment Algorithm**
+                        UHF -> UHF: Wait for **GPO Deployment Algorithm** to complete
+
+                        UHF -> Ant: Check antenna status
+                        Ant --> UHF: Return antenna status
+                        alt Antenna deployed
+                            UHF -> UHF: Exit "UHF deployment logic" block
+                        end
+                        UHF -> UHF: Exit innermost loop due to timeout
+                    end
+
+                end
+            end
+        end
+
+        UHF -> UHF: Increment Loop counter
+        UHF -> UHF: Delay ( **5** sec)
+    end
+end
+
+@enduml
