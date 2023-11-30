@@ -16,7 +16,7 @@ class EnduroUartUHFCommunication(EnduroUARTService):
         self.__protocol_encoder = EnduroUartUHFEncoder()
         self.__protocol_decoder = EnduroUartUHFDecoder()
 
-    def encode_data(self, uhf_module: UHFModule, mode):
+    def encode_data(self, uhf_module: UHFModule, mode: str):
         return self.__protocol_encoder.encoder(uhf_module, mode)
 
     def decode_data(self, data, mode: str):

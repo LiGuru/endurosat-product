@@ -8,9 +8,9 @@ from domain.model.base_object import BaseObject
 
 class UHFModule(BaseObject):
     baud_rates = {
-        0x00: 9600,
-        0x10: 19200,
-        0x11: 115200
+        int("000", 2): 9600,
+        int("010", 2): 19200,
+        int("011", 2): 115200
     }
     modulations = {
         0: ["2GFSK", 1200, 600, 1],
@@ -25,6 +25,7 @@ class UHFModule(BaseObject):
 
     def __init__(self, address, *, attributes: list):
         super().__init__(address)
+        self.__uart_baud_mode = int("0x11", 0)
         self.uhf_specific_attributes = attributes if attributes else []
         self.__hfxt: bool = False  # High-frequency oscillator status: 0—oscillator OK, 1—oscillator error
 
@@ -74,7 +75,11 @@ class UHFModule(BaseObject):
     def set_uart_baud(self, baud_rate: int):
         if baud_rate not in UHFModule.baud_rates:
             raise KeyError("Not support baud rate key")
-        self.set_uart_baud(UHFModule.baud_rates.get(baud_rate))
+        self.__uart_baud_mode = baud_rate
+        self.__uart_baud = UHFModule.baud_rates.get(baud_rate)
+
+    def get_uart_baud_mode(self):
+        return self.__uart_baud_mode
 
     def get_reset(self) -> bool:
         return self.__reset
