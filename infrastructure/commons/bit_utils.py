@@ -1,3 +1,5 @@
+import binascii
+
 
 class BitUtils:
     @staticmethod
@@ -41,3 +43,9 @@ class BitUtils:
         """Convert a binary string to hexadecimal."""
         hex_string = hex(int(binary_string, 2))[2:]
         return hex_string.zfill((len(hex_string) + 1) // 2 * 2)
+
+    @staticmethod
+    def calculate_crc32_hex(data):
+        crc32 = binascii.crc32(data.encode())
+        crc32_hex = format(crc32 & 0xFFFFFFFF, '08X')
+        return crc32_hex

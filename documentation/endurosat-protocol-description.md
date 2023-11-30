@@ -70,7 +70,6 @@ To switch back and forth between bootloader and application, the user will have 
 | [C..C] | are the 8 ASCII characters representing the calculated CRC32.                                                                                                 |
 
 ***Example commands:***
-
     ES+R2200 BD888E1F<CR>
     ES+W22003323 589B0F83<CR>
 
