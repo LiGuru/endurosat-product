@@ -6,7 +6,7 @@ class UseUHFModule(UHFModule):
 
     def set_schema(self, schema):
         result = self.decoder(schema, 'r')
-        if result["type"] is "error":
+        if result["type"] == "error":
             # TODO:
             #   Handle Errors
             raise
