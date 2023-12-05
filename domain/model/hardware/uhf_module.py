@@ -1,17 +1,18 @@
+import re
+
 from domain.model.base_object import BaseObject
+from infrastructure.commons.bit_utils import BitUtils
 
-
-# TODO:
-#   - check instance variables names
-#   - remove comments
-#   - are instance variables needed?
 
 class UHFModule(BaseObject):
+    REGISTER = 0x00
+
     baud_rates = {
         int("000", 2): 9600,
         int("010", 2): 19200,
         int("011", 2): 115200
     }
+
     modulations = {
         0: ["2GFSK", 1200, 600, 1],
         1: ["2GFSK", 2400, 600, 0.5],
@@ -25,7 +26,7 @@ class UHFModule(BaseObject):
 
     def __init__(self, address, *, attributes: list):
         super().__init__(address)
-        self.__uart_baud_mode = int("0x11", 0)
+        self.__uart_baud_mode = int("011", 2)
         self.uhf_specific_attributes = attributes if attributes else []
         self.__hfxt: bool = False  # High-frequency oscillator status: 0—oscillator OK, 1—oscillator error
 
@@ -62,6 +63,20 @@ class UHFModule(BaseObject):
         self.__modulation_data_rate: int = 9600
         self.__modulation_fdev: int = 2400
         self.__modulation_index: float = 0.5
+        self.__reset_counter: int = 0x00
+        self.__rssi: int = 0x00
+
+    def set_rssi(self, value):
+        self.__rssi = value
+
+    def get_rssi(self):
+        return self.__rssi
+
+    def set_reset_counter(self, value):
+        self.__reset_counter = value
+
+    def get_reset_counter(self):
+        return self.__reset_counter
 
     def get_hfxt(self) -> bool:
         return self.__hfxt
@@ -165,5 +180,105 @@ class UHFModule(BaseObject):
         self.set_modulation_index(mod_index)
         self.set_rf_mode(modulation_type)
 
-    def set_dimensions(self, *args):
-        pass
+    def decoder(self, msg, mode: str):
+        parsed_data = self.parse_response_frame(msg)
+
+        if parsed_data:
+            parsed_data['scw_decoded'] = self.frame_decoder(
+                parsed_data['scw_value']) if 'scw_value' in parsed_data else {}
+        else:
+            raise LookupError
+
+        return parsed_data
+
+    def encoder(self, mode: str, register: any = None):
+        REGISTER = hex(self.REGISTER)[2:].upper().zfill(2) if not register else register
+        if not REGISTER:
+            raise
+        if mode == 'r':
+            return self.encode_read_operation(REGISTER)
+        elif mode == 'w':
+            return self.encode_write_operation(REGISTER)
+
+    def encode_write_operation(self, register):
+
+        binary_scw = f"{0}{int(self.get_hfxt())}{format(self.get_uart_baud_mode(), '03b')}{0}" \
+                     f"{format(self.get_rf_mode(), '03b')}{int(self.get_echo())}{int(self.get_bcn())}{int(self.get_pipe())}" \
+                     f"{int(self.get_boot())}{0}{0}{int(self.get_fram() == 'OK')}{int(self.get_rfts())}"
+        data = f"""ES+{"W"}{self.get_address():02X}{register}{BitUtils.binary_to_hex(binary_scw)}' '"""
+        return f"""{data}{BitUtils.calculate_crc32_hex(data)}"""
+
+    def encode_read_operation(self, register):
+        data = f"""ES+{"R"}{self.get_address():02X}{register}"""
+        return f"""{data} {BitUtils.calculate_crc32_hex(data)}"""
+
+    @staticmethod
+    def parse_response_frame(frame: str) -> dict:
+
+        success_match = re.compile(r'OK\+([0-9A-Fa-f]{4}) (\w{8})').match(frame)
+        bootloader_match = re.compile(r'OK\+C3C3 (\w{8})').match(frame)
+        application_match = re.compile(r'OK\+8787 (\w{8})').match(frame)
+        exit_pipe_mode_match = re.compile(r'\+ESTTCB (\w{8})').match(frame)
+        error_match = re.compile(r'ERR\+(VAL) (\w{8})').match(frame)
+        answer_match = re.compile(r'OK\+(\w{2})(\w{2})(\w{2})(\w{4}) (\w{8})').match(frame)
+
+        if bootloader_match:
+            return {
+                'type': 'bootloader',
+                'crc32': bootloader_match.group(1)
+            }
+        elif application_match:
+            return {
+                'type': 'application',
+                'crc32': application_match.group(1)
+            }
+        elif success_match:
+            return {
+                'type': 'success',
+                'scw_value': success_match.group(1),
+                'crc32': success_match.group(2)
+            }
+        elif exit_pipe_mode_match:
+            return {
+                'type': 'exit_pipe_mode',
+                'crc32': exit_pipe_mode_match.group(1)
+            }
+        elif error_match:
+            return {
+                'type': 'error',
+                'error_code': error_match.group(1),
+                'crc32': error_match.group(2)
+            }
+        elif answer_match:
+            return {
+                'type': 'answer',
+                'rssi': answer_match.group(1),
+                'address': answer_match.group(2),
+                'reset_counter': answer_match.group(3),
+                'scw_value': answer_match.group(4),
+                'crc32': answer_match.group(5)
+            }
+        else:
+            raise NotImplemented
+
+    @staticmethod
+    def frame_decoder(data: str) -> object:
+        binary_value = bin(int(data, 16))[2:].zfill(16)
+
+        scw = {
+            "Reserved": binary_value[0],
+            "HFXT": binary_value[1],
+            "UartBaud": binary_value[2:4],
+            "Reset": binary_value[4],
+            "RFMode": binary_value[5:8],
+            "Echo": binary_value[8],
+            "BCN": binary_value[9],
+            "Pipe": binary_value[10],
+            "Boot": binary_value[11],
+            "CTS": binary_value[12],
+            "SEC": binary_value[13],
+            "FRAM": binary_value[14],
+            "RFTS": binary_value[15]
+        }
+
+        return scw

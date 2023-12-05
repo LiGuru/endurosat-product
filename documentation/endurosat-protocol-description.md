@@ -30,7 +30,7 @@
 | [01]         | FRAM: Indicates whether FRAM is initialized correctly after reset; OK, O-FRAM Error                                                                                   |
 | [00]         | RFTS: Indicates whether radio transceiver is initialized correctly after reset 1-OK, 0- Radio Error                                                                   |
      
-To switch back and forth between bootloader and application, the user will have to set both bit 4 and bit 11 bearing in mind their effect as decribed in table 15. If only bit 4 is set/cleared the device will stay in its current mode (bootloader or application).
+To switch back and forth between bootloader and application, the user will have to set both bit 4 and bit 11 bearing in mind their effect as described in table 15. If only bit 4 is set/cleared the device will stay in its current mode (bootloader or application).
 
 ***Table 16: Available RF Modes***
 
@@ -102,20 +102,31 @@ To switch back and forth between bootloader and application, the user will have 
 
 | [15] [14] [13] | [12]  | [11] [10] [09] | [08]  |     [07] [06] [05] [04] [03] [02] [01] [00]     |
 |:--------------:|:-----:|:--------------:|-------|:-----------------------------------------------:|
-|    Reserved    | Firs  |    Reserved    | EN    |                      Time                       |
+|    Reserved    | First |    Reserved    | EN    |                      Time                       |
 |     0 0 0      | r/w-0 |     0 0 0      | r/w-0 | r/w-0 r/w-0 r/w-0 r/w-0 r/w-0 r/w-0 r/w-0 r/w-0 |
 
 - ***[PPPP]***
 
-    ```Indicates UHF Antenna release configuration. The First Byte denotes the enable automatic antenna deployment flag and the enable robust deployment flag. By default, these flags are not set (***deployment is disabled***). The second Byte specifies the time in minutes (in HEX) after power-up after which the deployment sequence should be executed```
+    ```Indicates UHF Antenna release configuration. 
+        The First Byte denotes the enable automatic antenna deployment flag and the enable robust deployment flag. 
+        By default, these flags are not set (***deployment is disabled***). 
+        The second Byte specifies the time in minutes (in HEX) after power-up after which the deployment sequence should be executed
+  ```
 
 - ***[FFFF]***
 
-    ```The Upper Byte can be used to enable/disable the automatic release sequnnce by setting/clearing the ***EN*** bit. The ***First*** bit indicates if the robust automatic release sequence is to be executed. If set, the release logic will check (after power-up/reset amd first antena connection) if any rods are opened. If such are found, the logic will consider that some issues have occured and will try to deploy them firs. If this algorithm is successfully executed, the ***First*** flag will be cleared automatically, otherwise it will stay set and the UHF Tranciever will try ti deploy all open rods again at next power-up/reset cycle. ```
+    ```The Upper Byte can be used to enable/disable the automatic release sequnnce by setting/clearing the ***EN*** bit. 
+       The ***First*** bit indicates if the robust automatic release sequence is to be executed. 
+       If set, the release logic will check (after power-up/reset amd first antena connection) if any rods are opened. 
+       If such are found, the logic will consider that some issues have occured and will try to deploy them first. 
+       If this algorithm is successfully executed, the ***First*** flag will be cleared automatically, 
+       otherwise it will stay set and the UHF Tranciever will try to deploy all open rods again at next power-up/reset cycle. 
+  ```
     
-    ```The Lower Byte spcifies the time in minutes after device power-up when antenna deployment should happpen. This value is in HEH and can be anything between ***0x0A*** and ***0XFF*** including.```
+    ```The Lower Byte spcifies the time in minutes after device power-up when antenna deployment should happpen. 
+       This value is in HEH and can be anything between ***0x0A*** and ***0XFF*** including.```
 
-***Bear in mind*** that if a release command is given to the device and the device has powered up longer than the time indicates by the Lower Byte, the anntena release sequence ***will begin immediately!*** In case the command is sent via I2C, the user may not get an appropriate reply as the UHF Transceiver will swich to I2C master mode.
+***Bear in mind*** that if a release command is given to the device and the device has powered up longer than the time indicates by the Lower Byte, the antenna release sequence ***will begin immediately!*** In case the command is sent via I2C, the user may not get an appropriate reply as the UHF Transceiver will swich to I2C master mode.
 
 To prepare the UHF to release the antenna after next power-up, power-uo the UHF module, set the appropriate command values and power-off device. At the next power-up the UHF will wait until the set time elapsed and will release the antenna. If the device is not powered-off after release command is set, the release will happen as soon as the internal UHF timer reaches the set time.
 

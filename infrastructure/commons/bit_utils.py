@@ -45,6 +45,16 @@ class BitUtils:
         return hex_string.zfill((len(hex_string) + 1) // 2 * 2)
 
     @staticmethod
+    def int_to_hex(int_value):
+        """Convert a int value to hexadecimal 4 chars."""
+        return hex(int_value)[2:].upper().zfill(4)
+
+    @staticmethod
+    def hex_to_int(hex_value):
+        """Convert a hax value to integer"""
+        return int(hex_value, 16)
+
+    @staticmethod
     def calculate_crc32_hex(data):
         crc32 = binascii.crc32(data.encode())
         crc32_hex = format(crc32 & 0xFFFFFFFF, '08X')

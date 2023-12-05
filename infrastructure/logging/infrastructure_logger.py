@@ -17,7 +17,7 @@ class ProgramLogger:
     filename = f"app_default.log"
     lg = os.path.join(log_file_path, filename)
 
-    def __init__(self, name: str, log_path: object = lg, log_format: object = None, infoLevel: object = None) -> object:
+    def __init__(self, name: str, log_path: object = lg, log_format: object = None, info_level: object = None):
         try:
             if name is None:
                 raise ValueError("Name argument not specified")
@@ -25,13 +25,13 @@ class ProgramLogger:
                 logformat = '%(message)s'
             else:
                 logformat = log_format
-            if not infoLevel:
-                infoLevel = "info"
+            if not info_level:
+                info_level = "info"
             self.log_path = log_path
             self.logformat = logformat
             self.name = name.upper()
             self.logger = logging.getLogger(self.name)
-            log_level = self.level_to_int(infoLevel)
+            log_level = self.level_to_int(info_level)
             self.logger.setLevel(log_level)
             self.add_consolehandler(log_level, logformat)
 
@@ -71,24 +71,24 @@ class ProgramLogger:
     def critical(self, message):
         self.logger.critical(message)
 
-    def setLevel(self, infoLevel):
+    def set_level(self, info_level):
         # To dynamically reset the loglevel, you need to also change the parent levels as well as all handlers!
-        self.logger.parent.setLevel(infoLevel)
+        self.logger.parent.setLevel(info_level)
         for handler in self.logger.parent.handlers:
-            handler.setLevel(infoLevel)
+            handler.setLevel(info_level)
 
-        self.logger.setLevel(infoLevel)
+        self.logger.setLevel(info_level)
         for handler in self.logger.handlers:
-            handler.setLevel(infoLevel)
+            handler.setLevel(info_level)
 
         return self.logger.level
 
-    def add_consolehandler(self, infoLevel=logging.INFO,
+    def add_consolehandler(self, info_level=logging.INFO,
                            logformat='%(asctime)s %(levelname)s %(name)s %(funcName)s %(message)s'):
         sh = logging.StreamHandler()
-        sh.setLevel(infoLevel)
+        sh.setLevel(info_level)
         fl = handlers.RotatingFileHandler(self.log_path, maxBytes=2048000, backupCount=100, encoding='utf-8')
-        fl.setLevel(infoLevel)
+        fl.setLevel(info_level)
         formatter = logging.Formatter(logformat)
         sh.setFormatter(formatter)
         fl.setFormatter(formatter)
