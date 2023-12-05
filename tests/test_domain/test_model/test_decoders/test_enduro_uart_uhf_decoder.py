@@ -84,3 +84,4 @@ def test_parse_response_frame_answer():
     }
     result.pop('scw_decoded')
     assert result.items() == expected_result.items()
+
