@@ -5,6 +5,7 @@ from pathlib import Path
 from infrastructure.config.configuration import Config
 from infrastructure.logging.infrastructure_logger import ProgramLogger
 
+
 class ProjectDefinition:
 
     @classmethod

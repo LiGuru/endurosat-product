@@ -1,4 +1,4 @@
-from abc import ABC, abstractmethod
+from abc import ABC, abstractmethod, abstractproperty
 
 
 class BaseObject(ABC):
@@ -6,8 +6,16 @@ class BaseObject(ABC):
     def __init__(self, address):
         self.__address = address
 
+    @property
     @abstractmethod
-    def set_dimensions(self, *args):
+    def REGISTER(self):
+        raise NotImplemented
+
+    @abstractmethod
+    def decoder(self, *args):
+        raise NotImplemented
+
+    def encoder(self, *args):
         raise NotImplemented
 
     def set_address(self, address: str) -> None:

@@ -1,12 +1,12 @@
-from domain.model.decoders.enduro_uhf_protocol_decoder import EnduroUartUHFDecoder
+from domain.model.hardware.uhf_module import UHFModule
 from infrastructure.commons.bit_utils import BitUtils
 
 
 def test_parse_response_frame_success():
-    decoder = EnduroUartUHFDecoder()
+    uhf_module = UHFModule(address=0x22, attributes=[])
     data = 'OK+3303'
     frame = f"""{data} {BitUtils.calculate_crc32_hex(data)}"""
-    result = decoder.decoder(frame, "r")
+    result = uhf_module.decoder(frame, "r")
     expected_result = {
         'type': 'success',
         'scw_value': '3303',

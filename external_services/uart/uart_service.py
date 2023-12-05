@@ -1,13 +1,10 @@
-import threading
 from typing import Callable
 
 import serial
 
 
 class UARTService:
-    # TODO:
-    #    For remove threading and callback;
-    #    IDP782->CLSNemo->EnduroSat;
+
     def __init__(self, serial_port: str, callback: Callable,
                  baud_rate: int = 9200, bits: int = 8, stop_bits: int = 1, parity: str = None,
                  flow: str = None, timeout: int = 1):
@@ -22,9 +19,27 @@ class UARTService:
         self.receive_thread = None
         self.running = False
         self.callback = callback
+        self.__carriage_return = 'r'
+
+    def set_carriage_return(self, cr):
+        self.__carriage_return = cr
+
+    @staticmethod
+    def get_carriage_encoded(carriage):
+        if carriage == 'r':
+            return '\r'.encode('ascii')
+        elif carriage == "n":
+            return '\n'.encode('ascii')
+        elif carriage == "rn":
+            return '\r\n'.encode('ascii')
+        elif carriage == "nr":
+            return '\n\r'.encode('ascii')
+        else:
+            return None
 
     def open(self):
         self.ser = serial.Serial()
+
         self.ser.baudrate = self.baud_rate
         self.ser.port = self.serial_port
         self.ser.stopbits = self.__stop_bits
@@ -46,34 +61,33 @@ class UARTService:
     def is_open(self):
         return self.ser is not None and self.ser.isOpen()
 
-    def send_message(self, message):
+    def send_message(self, message, *, carriage: str = ''):
+        carriage_return = self.get_carriage_encoded(carriage)
+        if carriage_return:
+            t = message + carriage_return
+        else:
+            t = message
+
         if not self.is_open():
             self.open()
             self.ser.open()
-        t = f"{message}\r\n"
-        self.ser.write(bytes(t, 'utf-8'))
 
-    def read_message(self):
+        self.ser.write(bytes(t, 'ascii'))
+
+    def read_multi_line_message(self):
         if self.is_open() and self.ser.in_waiting > 0:
             data_list_encoded = self.ser.readlines()
-            # data_list_encoded =  self.ser.read_until(b'\r\n')
             data_list_decoded = []
             for e in data_list_encoded:
                 data_list_decoded.append(e.decode('utf-8'))
             return data_list_decoded
 
-    def listen_for_messages(self):
-        while self.running and self.is_open():
-            if self.ser.in_waiting > 0:
-                received_data = self.read_message()
-                self.callback(received_data)
+    def read_line_based_message(self, *, pack_size: int = 22, carriage: str = 'r'):
 
-    def start_listening(self):
-        self.running = True
-        self.receive_thread = threading.Thread(target=self.listen_for_messages)
-        self.receive_thread.start()
+        carriage_return = self.get_carriage_encoded(carriage)
+        terminator = carriage_return if carriage_return else '\r'.encode('ascii')
 
-    def stop_listening(self):
-        self.running = False
-        if self.receive_thread:
-            self.receive_thread.join()
+        if self.is_open() and self.ser.in_waiting > 0:
+            data = self.ser.read_until(terminator=terminator, size=pack_size)
+            return data.decode('ascii').replace(terminator.decode('ascii'), '')
+        return None
