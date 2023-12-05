@@ -4,7 +4,6 @@
     - [Diagram](documentation/endurosat.puml)
     - [Protocols](documentation/endurosat-protocol-description.md)
 
-
 - Releases
   - [UHF_TASK](documentation/UHF_TASK.md)
   - [Antenna_TASK](documentation/Antenna_TASK.md)
