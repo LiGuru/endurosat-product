@@ -28,7 +28,7 @@ if __name__ == "__main__":
     sys_logger.info(f"""INITIAL: {repr(antenna_module)}""")
 
     if not DUMMY:
-        get_antenna_current_schema = communication.execute(antenna_module, 'w')
+        get_antenna_current_schema = communication.execute(antenna_module, 'r')
         antenna_module.set_schema(get_antenna_current_schema)
 
         get_uhf_current_schema = communication.execute(uhf_module, 'r')
