@@ -7,7 +7,7 @@ class UseAntennaModule(AntennaModule):
     def set_schema(self, schema: dict) -> None:
         result = self.decoder(schema, 'r')
         result = self.decoder(schema, 'r')
-        if result["type"] is "error":
+        if result["type"] == "error":
             # TODO:
             #   Handle Errors
             raise
