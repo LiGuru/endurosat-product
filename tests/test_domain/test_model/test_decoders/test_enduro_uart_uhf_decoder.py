@@ -17,10 +17,10 @@ def test_parse_response_frame_success():
 
 
 def test_parse_response_frame_bootloader():
-    decoder = EnduroUartUHFDecoder()
+    uhf_module = UHFModule(address=0x22, attributes=[])
     data = 'OK+C3C3'
     frame = f"""{data} {BitUtils.calculate_crc32_hex(data)}"""
-    result = decoder.decoder(frame, "r")
+    result = uhf_module.decoder(frame, "r")
     expected_result = {
         'type': 'bootloader',
         'crc32': BitUtils.calculate_crc32_hex(data),
@@ -30,10 +30,10 @@ def test_parse_response_frame_bootloader():
 
 
 def test_parse_response_frame_application():
-    decoder = EnduroUartUHFDecoder()
+    uhf_module = UHFModule(address=0x22, attributes=[])
     data = 'OK+8787'
     frame = f"""{data} {BitUtils.calculate_crc32_hex(data)}"""
-    result = decoder.decoder(frame, "r")
+    result = uhf_module.decoder(frame, "r")
     expected_result = {
         'type': 'application',
         'crc32': BitUtils.calculate_crc32_hex(data),
@@ -43,10 +43,10 @@ def test_parse_response_frame_application():
 
 
 def test_parse_response_frame_exit_pipe_mode():
-    decoder = EnduroUartUHFDecoder()
+    uhf_module = UHFModule(address=0x22, attributes=[])
     data = '+ESTTCB'
     frame = f"""{data} {BitUtils.calculate_crc32_hex(data)}"""
-    result = decoder.decoder(frame, "r")
+    result = uhf_module.decoder(frame, "r")
     expected_result = {
         'type': 'exit_pipe_mode',
         'crc32': BitUtils.calculate_crc32_hex(data),
@@ -56,10 +56,10 @@ def test_parse_response_frame_exit_pipe_mode():
 
 
 def test_parse_response_frame_error():
-    decoder = EnduroUartUHFDecoder()
+    uhf_module = UHFModule(address=0x22, attributes=[])
     data = 'ERR+VAL'
     frame = f"""{data} {BitUtils.calculate_crc32_hex(data)}"""
-    result = decoder.decoder(frame, "r")
+    result = uhf_module.decoder(frame, "r")
     expected_result = {
         'type': 'error',
         'error_code': 'VAL',
@@ -70,10 +70,10 @@ def test_parse_response_frame_error():
 
 
 def test_parse_response_frame_answer():
-    decoder = EnduroUartUHFDecoder()
+    uhf_module = UHFModule(address=0x22, attributes=[])
     data = 'OK+0022093303'
     frame = f"""{data} {BitUtils.calculate_crc32_hex(data)}"""
-    result = decoder.decoder(frame, "r")
+    result = uhf_module.decoder(frame, "r")
     expected_result = {
         'type': 'answer',
         'rssi': '00',
